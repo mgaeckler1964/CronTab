@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<gui>
+<forms>
+<form name="cronConfMainForm" width="478" height="607" caption="GAK Contab Configuration" id="128" baseClass="PopupWindow" style="277807104">
+<child type="FrameChild" name="" caption="" x="106" y="115" width="80" height="160" style="1342308352">
+<child type="FrameChild" name="" caption="" x="60" y="108" width="80" height="50" style="1342308352">
+<layoutManager type="RowManager" marginLeft="4" marginRight="4" marginTop="4" marginBottom="4" />
+<child type="PushButton" name="startButton" caption="Start" x="8" y="9" width="80" height="25" style="1342242816" id="130">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="stopButton" caption="Stop" x="97" y="9" width="80" height="25" style="1342242816" id="131">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="installButton" caption="Install" x="187" y="8" width="80" height="25" style="1342242816" id="132">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="removeButton" caption="Remove" x="281" y="9" width="80" height="25" style="1342242816" id="133">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<layout attachment="1" growWidth="1" />
+</child>
+<layout attachment="1" growWidth="1" />
+<layoutManager type="AttachmentManager" />
+<child type="FrameChild" name="" caption="" x="0" y="80" width="80" height="100" style="1342308352">
+<layout attachment="3" growWidth="1" />
+<child type="Label" name="" caption="Username:" x="18" y="18" width="0" height="0" style="1342242827">
+<layout x="0" y="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="Label" name="" caption="Crontab Service:" x="8" y="57" width="0" height="0" style="1342242827">
+<layout x="0" y="2" width="1" height="1" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="Label" name="" caption="Password:" x="26" y="54" width="0" height="0" style="1342242827">
+<layout x="0" y="1" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="EditControl" name="EditUsername" caption="" x="229" y="22" width="80" height="25" style="1350631808" id="134">
+<layout x="1" y="0" growWidth="1" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="EditControl" name="EditPassword" caption="" x="239" y="65" width="80" height="25" style="1350631584" id="135">
+<layout x="1" y="1" growWidth="1" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<layoutManager type="TableManager" marginLeft="4" marginRight="4" marginTop="4" marginBottom="4" />
+<child type="Label" name="crontabStatusLabel" caption="status" x="150" y="57" width="200" height="20" style="1342242827" id="136">
+<layout x="1" y="2" width="1" height="1" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+</child>
+</child>
+<child type="FrameChild" name="" caption="" x="131" y="210" width="80" height="41" style="1342308352">
+<layout attachment="3" growWidth="1" />
+<child type="PushButton" name="AddButton" caption="Add..." x="23" y="38" width="80" height="25" style="1342242816" id="137">
+<layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="DeleteButton" caption="Delete..." x="145" y="45" width="80" height="25" style="1342242816" id="138">
+<layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="EditButton" caption="Edit..." x="273" y="52" width="80" height="25" style="1342242816" id="139">
+<layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<child type="PushButton" name="IDOK" caption="Close" x="510" y="57" width="80" height="25" style="1342242816" id="1">
+<layout attachment="2" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
+<layoutManager type="AttachmentManager" marginLeft="4" marginRight="4" marginTop="4" marginBottom="4" />
+</child>
+<layoutManager type="AttachmentManager" marginLeft="0" marginRight="0" marginTop="0" marginBottom="0" />
+<child type="Label" name="" caption="CRON Jobs:" x="57" y="193" width="0" height="0" style="1342242827">
+<layout attachment="1" paddingLeft="8" paddingRight="8" paddingTop="10" paddingBottom="4" />
+</child>
+<child type="ListBox" name="cronJobs" caption="" x="103" y="258" width="80" height="25" style="1350631681" id="140">
+<layout attachment="4" paddingLeft="8" paddingRight="8" paddingTop="4" paddingBottom="0" growWidth="1" growHeight="1" />
+</child>
+</form>
+<form name="CreateEditJobForm" width="518" height="172" caption="Create/Edit Cron Job" style="2428502016" baseClass="ModalPopup" id="129">
+<layoutManager type="TableManager" marginLeft="4" marginRight="4" marginTop="4" marginBottom="4" />
+<child type="Label" name="" caption="Title:" x="25" y="21" width="0" height="0" style="1342242827">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="1" y="0" />
+</child>
+<child type="Label" name="" caption="Commandline:" x="30" y="48" width="0" height="0" style="1342242827">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="1" y="1" />
+</child>
+<child type="Label" name="" caption="Next Start:" x="32" y="71" width="0" height="0" style="1342242827">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="1" y="2" />
+</child>
+<child type="Label" name="" caption="Interval:" x="31" y="104" width="0" height="0" style="1342242827">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="1" y="3" />
+</child>
+<child type="EditControl" name="newTitle" caption="" x="119" y="26" width="80" height="25" style="1350631808" id="141">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="0" growWidth="1" width="3" />
+</child>
+<child type="EditControl" name="commandLine" caption="" x="125" y="62" width="80" height="25" style="1350631808" id="142">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="1" growWidth="1" width="3" />
+</child>
+<child type="EditControl" name="nextStart" caption="" x="136" y="101" width="80" height="25" style="1350631808" id="143">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="2" growWidth="1" width="3" />
+</child>
+<child type="EditControl" name="interval" caption="" x="131" y="144" width="80" height="25" style="1350631808" id="144">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="3" />
+</child>
+<child type="ComboBox" name="intervalType" caption="" x="274" y="156" width="80" height="200" style="1342243843" id="145">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="3" y="3" />
+<items>
+<item>Seconds</item>
+<item>Minuites</item>
+<item>Hours</item>
+<item>Days</item>
+</items>
+</child>
+<child type="CheckBox" name="multipleInstances" caption="Multiple Instances" x="385" y="159" width="0" height="0" style="1342242819" id="146">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="4" y="3" />
+</child>
+<child type="PushButton" name="IDOK" caption="&amp;OK" x="596" y="28" width="80" height="25" style="1342242817" id="1">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="5" y="0" />
+</child>
+<child type="PushButton" name="IDCANCEL" caption="&amp;Cancel" x="605" y="81" width="80" height="25" style="1342242816" id="2">
+<layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="5" y="1" />
+</child>
+</form>
+</forms>
+</gui>

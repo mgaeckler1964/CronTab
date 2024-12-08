@@ -1,0 +1,129 @@
+/*
+		Project:		crontab
+		Module:			crontab.rc
+		Description:	Windows Resource Definitions
+		Author:			Martin Gäckler
+		Address:		Hofmannsthalweg 14, A-4030 Linz
+		Web:			https://www.gaeckler.at/
+
+		Copyright:		(c) 1988-2024 Martin Gäckler
+
+		This program is free software: you can redistribute it and/or modify  
+		it under the terms of the GNU General Public License as published by  
+		the Free Software Foundation, version 3.
+
+		You should have received a copy of the GNU General Public License 
+		along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+		THIS SOFTWARE IS PROVIDED BY Martin Gäckler, Austria, Linz ``AS IS''
+		AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+		TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+		PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR
+		CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+		SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+		LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+		USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+		ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+		OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+		OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+		SUCH DAMAGE.
+*/
+
+#if !defined(WORKSHOP_INVOKED)
+# include <windows.h>
+#endif
+
+#include "cronconst.h"
+//
+// Misc application definitions
+//
+
+// Application ICON
+//
+IDI_SDIAPPLICATION ICON "applsdi.ico"
+
+
+
+// Version info.
+//
+#if !defined(__DEBUG_)
+
+// Non-Debug VERSIONINFO
+//
+1 VERSIONINFO LOADONCALL MOVEABLE
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+FILEFLAGSMASK 0
+FILEFLAGS VS_FFI_FILEFLAGSMASK
+#if defined(BI_PLAT_WIN32)
+FILEOS VOS__WINDOWS32
+#else
+FILEOS VOS__WINDOWS16
+#endif
+FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+	// Language type = U.S. English(0x0409) and Character Set = Windows, Multilingual(0x04e4)
+	BLOCK "040904E4"              // Matches VarFileInfo Translation hex value.
+	BEGIN
+	  VALUE "CompanyName", "Martin Gäckler\000"
+	  VALUE "FileDescription", "cronconf for Windows\000"
+	  VALUE "FileVersion", "1.0\000"
+	  VALUE "InternalName", "cronconf\000"
+	  VALUE "LegalCopyright", "Copyright © 2002. All Rights Reserved.\000"
+	  VALUE "LegalTrademarks", "Windows(TM) is a trademark of Microsoft Corporation\000"
+	  VALUE "OriginalFilename", "cronconf.exe\000"
+	  VALUE "ProductName", "cronconf\000"
+	  VALUE "ProductVersion", "1.0\000"
+	END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+	VALUE "Translation", 0x0409, 0x04e4    // U.S. English(0x0409) & Windows Multilingual(0x04e4) 1252
+  END
+END
+
+#else
+
+// Debug VERSIONINFO
+//
+1 VERSIONINFO LOADONCALL MOVEABLE
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+FILEFLAGSMASK VS_FF_DEBUG | VS_FF_PRERELEASE | VS_FF_PATCHED | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
+FILEFLAGS VS_FFI_FILEFLAGSMASK
+#if defined(BI_PLAT_WIN32)
+FILEOS VOS__WINDOWS32
+#else
+FILEOS VOS__WINDOWS16
+#endif
+FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+	// Language type = U.S. English(0x0409) and Character Set = Windows, Multilingual(0x04e4)
+	BLOCK "040904E4"              // Matches VarFileInfo Translation hex value.
+	BEGIN
+	  VALUE "CompanyName", "Martin Gäckler\000"
+	  VALUE "FileDescription", "cronconf for Windows\000"
+	  VALUE "FileVersion", "1.0\000"
+	  VALUE "InternalName", "cronconf\000"
+	  VALUE "LegalCopyright", "Copyright © 2002. All Rights Reserved.\000"
+	  VALUE "LegalTrademarks", "Windows(TM) is a trademark of Microsoft Corporation\000"
+	  VALUE "OriginalFilename", "cronconf.exe\000"
+	  VALUE "ProductName", "cronconf\000"
+	  VALUE "ProductVersion", "1.0\000"
+	  VALUE "SpecialBuild", "Debug Version\000"
+	  VALUE "PrivateBuild", "Built by Martin Gaeckler\000"
+	END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+	VALUE "Translation", 0x0409, 0x04e4    // U.S. English(0x0409) & Windows Multilingual(0x04e4) 1252
+  END
+END
+
+#endif
