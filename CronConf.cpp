@@ -119,7 +119,7 @@ public:
 
 class CronConfApplication : public Application
 {
-	virtual CallbackWindow  *createMainWindow( const char *cmdLine, int nCmdShow )
+	virtual CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ )
 	{
 		doDisableLog();
 		CronConfMainWindow	*mainWindow = new CronConfMainWindow;
@@ -309,14 +309,14 @@ static int writeJob(	const char *oldJob, const char *newTitle,
 														&dummy );
 						if( openResult == ERROR_SUCCESS )
 						{
-							RegSetValueEx( jobKey, COMMAND_LINE, 0, REG_SZ, (const unsigned char *)command, strlen( command ) + 1 );
-							RegSetValueEx( jobKey, INTERVAL, 0, REG_SZ, (const unsigned char *)interval, strlen( interval ) + 1 );
-							RegSetValueEx( jobKey, INTERVAL_TYPE, 0, REG_SZ, (const unsigned char *)intervalType, strlen( intervalType ) + 1 );
-							RegSetValueEx( jobKey, NEXT_START, 0, REG_SZ, (const unsigned char *)nextStart, strlen( nextStart ) + 1 );
+							RegSetValueExA( jobKey, COMMAND_LINE, 0, REG_SZ, (const unsigned char *)command, DWORD(strlen( command ) + 1) );
+							RegSetValueEx( jobKey, INTERVAL, 0, REG_SZ, (const unsigned char *)interval, DWORD(strlen( interval ) + 1) );
+							RegSetValueEx( jobKey, INTERVAL_TYPE, 0, REG_SZ, (const unsigned char *)intervalType, DWORD(strlen( intervalType ) + 1) );
+							RegSetValueEx( jobKey, NEXT_START, 0, REG_SZ, (const unsigned char *)nextStart, DWORD(strlen( nextStart ) + 1) );
 
 							multipleInst[0] = multipleInstances ? '1' : '0';
 							multipleInst[1] = 0;
-							RegSetValueEx( jobKey, MULTIPLE_INST, 0, REG_SZ, (const unsigned char *)multipleInst, strlen( multipleInst ) + 1 );
+							RegSetValueEx( jobKey, MULTIPLE_INST, 0, REG_SZ, (const unsigned char *)multipleInst, DWORD(strlen( multipleInst ) + 1) );
 
 							result = JOB_OK;
 							RegCloseKey( jobKey );

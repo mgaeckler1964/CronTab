@@ -232,7 +232,7 @@ static int findWaitingJob( void )
 	time_t		curTime		= time( NULL );
 	struct tm	*tmStruct	= NULL;
 
-	for( jobToStart = numCronJobs-1; jobToStart >= 0; jobToStart-- )
+	for( jobToStart = (int)(numCronJobs-1); jobToStart >= 0; jobToStart-- )
 	{
 		if( jobList[jobToStart].commandLine[0] && !jobList[jobToStart].pid )
 		{
@@ -324,7 +324,7 @@ static void saveNextStart(	const char *title,
 											&jobKey );
 				if( openResult == ERROR_SUCCESS )
 				{
-					RegSetValueEx( jobKey, NEXT_START, 0, REG_SZ, (const unsigned char *)nextStart, strlen( nextStart ) + 1 );
+					RegSetValueEx( jobKey, NEXT_START, 0, REG_SZ, (const unsigned char *)nextStart, (DWORD)(strlen( nextStart ) + 1) );
 					RegCloseKey( jobKey );
 				}
 
@@ -413,7 +413,7 @@ static void calcNextStart4All( void )
 	int			jobToStart;
 	DWORD		exitCode;
 
-	for( jobToStart = numCronJobs-1; jobToStart >= 0; jobToStart-- )
+	for( jobToStart = (int)(numCronJobs-1); jobToStart >= 0; jobToStart-- )
 	{
 		if( jobList[jobToStart].pid )
 		{
@@ -449,7 +449,7 @@ static unsigned long findSleepTime( void )
 		time_t			curTime		= time( NULL );
 		int				i;
 
-		for( i = numCronJobs-1; i >= 0; i-- )
+		for( i = (int)(numCronJobs-1); i >= 0; i-- )
 		{
 			if( jobList[i].sleeper > curTime )
 			{
@@ -553,7 +553,7 @@ static void WINAPI ServiceMain( DWORD x, LPSTR *y )
 }
 #endif
 
-int main( int argc, char **argv )
+int main(  )
 {
 #ifdef RUN_AS_SERVICE
 	SERVICE_TABLE_ENTRY   DispatchTable[] =
