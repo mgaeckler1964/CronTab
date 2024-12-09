@@ -21,6 +21,7 @@ namespace winlibGUI {
 		DeleteButton=static_cast<winlib::PushButton*>(findChild(DeleteButton_id));
 		EditButton=static_cast<winlib::PushButton*>(findChild(EditButton_id));
 		IDOK_PushButton=static_cast<winlib::PushButton*>(findChild(IDOK));
+		InfoLabel=static_cast<winlib::Label*>(findChild(InfoLabel_id));
 		cronJobs=static_cast<winlib::ListBox*>(findChild(cronJobs_id));
 	}	// cronConfMainForm
 

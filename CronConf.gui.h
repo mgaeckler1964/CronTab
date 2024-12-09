@@ -16,21 +16,22 @@
 namespace winlibGUI {
 
 	const int AddButton_id=137;
-	const int commandLine_id=142;
+	const int commandLine_id=143;
 	const int CreateEditJobForm_id=129;
 	const int cronConfMainForm_id=128;
-	const int cronJobs_id=140;
+	const int cronJobs_id=141;
 	const int crontabStatusLabel_id=136;
 	const int DeleteButton_id=138;
 	const int EditButton_id=139;
 	const int EditPassword_id=135;
 	const int EditUsername_id=134;
+	const int InfoLabel_id=140;
 	const int installButton_id=132;
-	const int interval_id=144;
-	const int intervalType_id=145;
-	const int multipleInstances_id=146;
-	const int newTitle_id=141;
-	const int nextStart_id=143;
+	const int interval_id=145;
+	const int intervalType_id=146;
+	const int multipleInstances_id=147;
+	const int newTitle_id=142;
+	const int nextStart_id=144;
 	const int removeButton_id=133;
 	const int startButton_id=130;
 	const int stopButton_id=131;
@@ -53,6 +54,7 @@ namespace winlibGUI {
 		winlib::PushButton *DeleteButton;
 		winlib::PushButton *EditButton;
 		winlib::PushButton *IDOK_PushButton;
+		winlib::Label *InfoLabel;
 		winlib::ListBox *cronJobs;
 		private:
 		virtual void getControls();

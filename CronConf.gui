@@ -49,22 +49,25 @@
 <child type="PushButton" name="AddButton" caption="Add..." x="23" y="38" width="80" height="25" style="1342242816" id="137">
 <layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
 </child>
-<child type="PushButton" name="DeleteButton" caption="Delete..." x="145" y="45" width="80" height="25" style="1342242816" id="138">
+<child type="PushButton" name="DeleteButton" caption="Delete..." x="96" y="8" width="80" height="24" style="1342242816" id="138">
 <layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
 </child>
-<child type="PushButton" name="EditButton" caption="Edit..." x="273" y="52" width="80" height="25" style="1342242816" id="139">
+<child type="PushButton" name="EditButton" caption="Edit..." x="184" y="8" width="80" height="24" style="1342242816" id="139">
 <layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
 </child>
 <child type="PushButton" name="IDOK" caption="Close" x="510" y="57" width="80" height="25" style="1342242816" id="1">
 <layout attachment="2" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
 </child>
 <layoutManager type="AttachmentManager" marginLeft="4" marginRight="4" marginTop="4" marginBottom="4" />
+<child type="Label" name="InfoLabel" caption="INF" x="288" y="16" width="80" height="24" style="1342242827" id="140">
+<layout attachment="0" paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" />
+</child>
 </child>
 <layoutManager type="AttachmentManager" marginLeft="0" marginRight="0" marginTop="0" marginBottom="0" />
 <child type="Label" name="" caption="CRON Jobs:" x="57" y="193" width="0" height="0" style="1342242827">
 <layout attachment="1" paddingLeft="8" paddingRight="8" paddingTop="10" paddingBottom="4" />
 </child>
-<child type="ListBox" name="cronJobs" caption="" x="103" y="258" width="80" height="25" style="1350631681" id="140">
+<child type="ListBox" name="cronJobs" caption="" x="103" y="258" width="80" height="25" style="1350631681" id="141">
 <layout attachment="4" paddingLeft="8" paddingRight="8" paddingTop="4" paddingBottom="0" growWidth="1" growHeight="1" />
 </child>
 </form>
@@ -82,19 +85,19 @@
 <child type="Label" name="" caption="Interval:" x="31" y="104" width="0" height="0" style="1342242827">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="1" y="3" />
 </child>
-<child type="EditControl" name="newTitle" caption="" x="119" y="26" width="80" height="25" style="1350631808" id="141">
+<child type="EditControl" name="newTitle" caption="" x="119" y="26" width="80" height="25" style="1350631808" id="142">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="0" growWidth="1" width="3" />
 </child>
-<child type="EditControl" name="commandLine" caption="" x="125" y="62" width="80" height="25" style="1350631808" id="142">
+<child type="EditControl" name="commandLine" caption="" x="125" y="62" width="80" height="25" style="1350631808" id="143">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="1" growWidth="1" width="3" />
 </child>
-<child type="EditControl" name="nextStart" caption="" x="136" y="101" width="80" height="25" style="1350631808" id="143">
+<child type="EditControl" name="nextStart" caption="" x="136" y="101" width="80" height="25" style="1350631808" id="144">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="2" growWidth="1" width="3" />
 </child>
-<child type="EditControl" name="interval" caption="" x="131" y="144" width="80" height="25" style="1350631808" id="144">
+<child type="EditControl" name="interval" caption="" x="131" y="144" width="80" height="25" style="1350631808" id="145">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="2" y="3" />
 </child>
-<child type="ComboBox" name="intervalType" caption="" x="274" y="156" width="80" height="200" style="1342243843" id="145">
+<child type="ComboBox" name="intervalType" caption="" x="274" y="156" width="80" height="200" style="1342243843" id="146">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="3" y="3" />
 <items>
 <item>Seconds</item>
@@ -103,7 +106,7 @@
 <item>Days</item>
 </items>
 </child>
-<child type="CheckBox" name="multipleInstances" caption="Multiple Instances" x="385" y="159" width="0" height="0" style="1342242819" id="146">
+<child type="CheckBox" name="multipleInstances" caption="Multiple Instances" x="385" y="159" width="0" height="0" style="1342242819" id="147">
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="4" y="3" />
 </child>
 <child type="PushButton" name="IDOK" caption="&amp;OK" x="596" y="28" width="80" height="25" style="1342242817" id="1">

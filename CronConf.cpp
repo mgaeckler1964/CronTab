@@ -37,6 +37,7 @@
 // ----- includes ------------------------------------------------------ //
 // --------------------------------------------------------------------- //
 
+#include <gak/fmtNumber.h>
 #include <winlib/WINAPP.H>
 
 #include "CronConf.gui.h"
@@ -788,6 +789,8 @@ ProcessStatus CreateEditJobForm::handleOk()
 
 ProcessStatus CronConfMainWindow::handleCreate( void )
 {
+	InfoLabel->setText(gak::formatNumber(sizeof(void*)*8) + "-bit");
+
 	readCronJobs( cronJobs );
 	checkService();
 	return psDO_DEFAULT;
