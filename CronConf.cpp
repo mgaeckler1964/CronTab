@@ -122,7 +122,7 @@ class CronConfApplication : public Application
 {
 	virtual CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ )
 	{
-		doDisableLog();
+		doEnableLogEx(gakLogging::llInfo);
 		CronConfMainWindow	*mainWindow = new CronConfMainWindow;
 		if( mainWindow->create( NULL ) == scERROR )
 		{
