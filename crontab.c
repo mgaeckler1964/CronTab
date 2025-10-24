@@ -55,6 +55,7 @@ typedef struct
 	int		nextMinute;
 	int		nextSecond;
 	long	interval;
+	bool	logProcess;
 	HANDLE	pid;
 } CRON_JOB;
 
@@ -67,6 +68,50 @@ static SERVICE_STATUS_HANDLE	MyServiceStatusHandle;
 
 static volatile int				servicePaused = 0;
 static volatile int				serviceStopped = 0;
+
+static void doLogLine( const char *message )
+{
+	FILE *out;
+	char tempFileName[1024];
+	const char *tmp = getenv( "TMP" );
+	if( tmp )
+	{
+		strcpy( tempFileName, tmp );
+	}
+	else
+	{
+		tempFileName[0] = 0;
+	}
+	strcat(tempFileName, "\\" SERVICE_NAME ".log" );
+	
+	out = fopen( tempFileName, "a" );
+	if( out )
+	{
+		fputs( message, out );
+		fputs( "\n", out );
+		fclose(out);
+	}
+}
+
+void logNTerror( void )
+{
+	char			*lpMsgBuf;
+	unsigned long errCode=GetLastError();
+
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		errCode,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &lpMsgBuf,
+		0, NULL );
+
+	doLogLine("Caused by:");
+	doLogLine( lpMsgBuf );
+	LocalFree( (LPVOID)lpMsgBuf );
+}
 
 /*
 	Write a message to the event log
@@ -86,9 +131,17 @@ static void EventLog( int type, const char *format, ... )
 	va_end( args );
 
 	eventHndl = RegisterEventSource( NULL, SERVICE_NAME );
-
-	ReportEvent( eventHndl, (WORD)type, 0, 0, 0, 1, 0, (LPCTSTR*)&msg, NULL );
-	DeregisterEventSource( eventHndl );
+	if( eventHndl )
+	{
+		ReportEvent( eventHndl, (WORD)type, 0, 0, 0, 1, 0, (LPCTSTR*)&msg, NULL );
+		DeregisterEventSource( eventHndl );
+	}
+	else
+	{
+		doLogLine( "Unable to register event source" );
+		logNTerror();
+		doLogLine( message );
+	}
 }
 
 /*
@@ -183,12 +236,16 @@ static void readJobList( void )
 												&(jobList[index].nextMinute),
 												&(jobList[index].nextSecond) );
 									jobList[index].interval = atoi( interval );
+									jobList[index].logProcess = false;
 									if( !strcmp( intervalType, "Minutes" ) )
 										jobList[index].interval *= 60;
 									else if( !strcmp( intervalType, "Hours" ) )
 										jobList[index].interval *= 60 * 60;
 									else if( !strcmp( intervalType, "Days" ) )
+									{
 										jobList[index].interval *= 60 * 60 * 24;
+										jobList[index].logProcess = true;
+									}
 
 									jobList[index].multipleInst = multiInst[0] == '1' ? true : false;
 
@@ -381,8 +438,9 @@ static void runJob( int index )
 
 	memset( &startInfo, 0, sizeof( startInfo ) );
 	startInfo.cb = sizeof( startInfo );
-
-//	EventLog( EVENTLOG_INFORMATION_TYPE, "Start command %s", jobList[index].commandLine );
+	
+	if( jobList[index].logProcess )
+		EventLog( EVENTLOG_INFORMATION_TYPE, "Start command %s", jobList[index].commandLine );
 
 	if( CreateProcess( NULL, jobList[index].commandLine,
 						NULL, NULL, FALSE, CREATE_SEPARATE_WOW_VDM,
@@ -420,7 +478,8 @@ static void calcNextStart4All( void )
 			GetExitCodeProcess( jobList[jobToStart].pid, &exitCode );
 			if( exitCode != STILL_ACTIVE )
 			{
-//				EventLog( EVENTLOG_INFORMATION_TYPE, "%s terminated", jobList[jobToStart].commandLine );
+				if( jobList[jobToStart].logProcess )
+					EventLog( EVENTLOG_INFORMATION_TYPE, "%s terminated", jobList[jobToStart].commandLine );
 				calcNextStart( jobToStart );
 
 				CloseHandle( jobList[jobToStart].pid );
@@ -553,7 +612,7 @@ static void WINAPI ServiceMain( DWORD x, LPSTR *y )
 }
 #endif
 
-int main(  )
+int main( void )
 {
 #ifdef RUN_AS_SERVICE
 	SERVICE_TABLE_ENTRY   DispatchTable[] =
