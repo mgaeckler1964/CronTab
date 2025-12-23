@@ -6,7 +6,7 @@
 		Address:		Hofmannsthalweg 14, A-4030 Linz
 		Web:			https://www.gaeckler.at/
 
-		Copyright:		(c) 1988-2024 Martin Gäckler
+		Copyright:		(c) 1988-2025 Martin Gäckler
 
 		This program is free software: you can redistribute it and/or modify  
 		it under the terms of the GNU General Public License as published by  
@@ -15,7 +15,7 @@
 		You should have received a copy of the GNU General Public License 
 		along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-		THIS SOFTWARE IS PROVIDED BY Martin Gäckler, Austria, Linz ``AS IS''
+		THIS SOFTWARE IS PROVIDED BY Martin Gäckler, Linz, Austria ``AS IS''
 		AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
 		TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 		PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR
@@ -47,7 +47,7 @@ typedef struct
 	char	cronJobTitle[BUFFER_SIZE];
 	char	commandLine[BUFFER_SIZE];
 	bool	multipleInst;
-	time_t	sleeper;
+	time_t	nextStartTime;
 	int		nextDay;
 	int		nextMonth;
 	int		nextYear;
@@ -57,6 +57,7 @@ typedef struct
 	long	interval;
 	bool	logProcess;
 	HANDLE	pid;
+	clock_t	startTime;
 } CRON_JOB;
 
 static size_t	numCronJobs		= 0;
@@ -219,14 +220,14 @@ static void readJobList( void )
 									RegQueryValueEx( jobKey, MULTIPLE_INST, NULL, NULL, (unsigned char *)multiInst, &size );
 
 
-									jobList[index].nextDay		=
-									jobList[index].nextMonth	=
-									jobList[index].nextYear		=
-									jobList[index].nextHour		=
-									jobList[index].nextMinute	=
-									jobList[index].nextSecond	= 0;
+									jobList[index].nextDay			=
+									jobList[index].nextMonth		=
+									jobList[index].nextYear			=
+									jobList[index].nextHour			=
+									jobList[index].nextMinute		=
+									jobList[index].nextSecond		= 0;
 
-									jobList[index].sleeper		= 0;
+									jobList[index].nextStartTime	= 0;
 
 									sscanf( nextStart, "%d.%d.%d %d:%d:%d",
 												&(jobList[index].nextDay),
@@ -250,6 +251,7 @@ static void readJobList( void )
 									jobList[index].multipleInst = multiInst[0] == '1' ? true : false;
 
 									jobList[index].pid = 0;
+									jobList[index].startTime = 0;
 
 									EventLog( EVENTLOG_INFORMATION_TYPE, "Found job %s", jobList[index].cronJobTitle );
 									EventLog( EVENTLOG_INFORMATION_TYPE, "Found command %s", jobList[index].commandLine );
@@ -293,9 +295,9 @@ static int findWaitingJob( void )
 	{
 		if( jobList[jobToStart].commandLine[0] && !jobList[jobToStart].pid )
 		{
-			if( jobList[jobToStart].sleeper )
+			if( jobList[jobToStart].nextStartTime )
 			{
-				if( jobList[jobToStart].sleeper < curTime )
+				if( jobList[jobToStart].nextStartTime < curTime )
 					break;
 			}
 			else
@@ -399,16 +401,15 @@ static void saveNextStart(	const char *title,
 */
 static void calcNextStart( size_t jobToStart )
 {
-	time_t		curTime;
+	time_t		nextStartTime;
 	struct tm	*tmStruct;
 	char		nextStart[BUFFER_SIZE];
 
-	curTime = time( NULL );
-	curTime += jobList[jobToStart].interval;
+	nextStartTime = time( NULL ) + jobList[jobToStart].interval;
 
-	jobList[jobToStart].sleeper = curTime;
+	jobList[jobToStart].nextStartTime = nextStartTime;
 
-	tmStruct = localtime( &curTime );
+	tmStruct = localtime( &nextStartTime );
 	tmStruct->tm_year += 1900;
 	tmStruct->tm_mon++;
 
@@ -449,6 +450,7 @@ static void runJob( int index )
 		if( !jobList[index].multipleInst )
 		{
 			jobList[index].pid = OpenProcess( PROCESS_QUERY_INFORMATION|PROCESS_TERMINATE, FALSE, procInfo.dwProcessId );
+			jobList[index].startTime = clock();
 			jobsRunning++;
 		}
 		else
@@ -479,7 +481,13 @@ static void calcNextStart4All( void )
 			if( exitCode != STILL_ACTIVE )
 			{
 				if( jobList[jobToStart].logProcess )
-					EventLog( EVENTLOG_INFORMATION_TYPE, "%s terminated", jobList[jobToStart].commandLine );
+				{
+					EventLog( 
+						EVENTLOG_INFORMATION_TYPE, 
+						"%s terminated, time %lu seconds ", 
+						jobList[jobToStart].commandLine, (clock()-jobList[jobToStart].startTime)/CLK_TCK 
+					);
+				}
 				calcNextStart( jobToStart );
 
 				CloseHandle( jobList[jobToStart].pid );
@@ -510,13 +518,13 @@ static unsigned long findSleepTime( void )
 
 		for( i = (int)(numCronJobs-1); i >= 0; i-- )
 		{
-			if( jobList[i].sleeper > curTime )
+			if( jobList[i].nextStartTime > curTime )
 			{
-				sleepTime = (unsigned long)(jobList[i].sleeper - curTime);
+				sleepTime = (unsigned long)(jobList[i].nextStartTime - curTime);
 				if( sleepTime < minSleepTime )
 					minSleepTime = sleepTime;
 			}
-			else if( jobList[i].sleeper )
+			else if( jobList[i].nextStartTime )
 				minSleepTime = 0;
 		}
 

@@ -101,7 +101,7 @@
 <layout paddingLeft="4" paddingRight="4" paddingTop="4" paddingBottom="4" x="3" y="3" />
 <items>
 <item>Seconds</item>
-<item>Minuites</item>
+<item>Minutes</item>
 <item>Hours</item>
 <item>Days</item>
 </items>

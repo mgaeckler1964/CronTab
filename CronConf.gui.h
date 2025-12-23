@@ -11,7 +11,10 @@
 #include <winlib/scrollFrame.h>
 #include <winlib/ControlW.h>
 #include <winlib/xmlEditorChild.h>
+#include <winlib/chartWin.h>
 #include <winlib/gridView.h>
+
+#include <winlib/winApp.h>
 
 namespace winlibGUI {
 
@@ -35,6 +38,12 @@ namespace winlibGUI {
 	const int removeButton_id=133;
 	const int startButton_id=130;
 	const int stopButton_id=131;
+
+	class GuiApplication : public winlib::Application {
+		public:
+		virtual gak::xml::Document *getGuiDoc();
+		GuiApplication(int iconID=-1) : winlib::Application(iconID) {}
+	};
 
 	class cronConfMainForm_form : public winlib::PopupWindow {
 		public:
