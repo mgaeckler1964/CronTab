@@ -6,7 +6,7 @@
 		Address:		Hofmannsthalweg 14, A-4030 Linz
 		Web:			https://www.gaeckler.at/
 
-		Copyright:		(c) 1988-2025 Martin Gäckler
+		Copyright:		(c) 1988-2026 Martin Gäckler
 
 		This program is free software: you can redistribute it and/or modify  
 		it under the terms of the GNU General Public License as published by  
@@ -33,14 +33,11 @@
 #include <time.h>
 
 #include <windows.h>
+#include <gak/gaklib.h>
 
 #include "cronconst.h"
 
 #define RUN_AS_SERVICE
-
-#ifdef _MSC_VER
-typedef enum { false, true } bool;
-#endif
 
 typedef struct
 {
@@ -70,10 +67,8 @@ static SERVICE_STATUS_HANDLE	MyServiceStatusHandle;
 static volatile int				servicePaused = 0;
 static volatile int				serviceStopped = 0;
 
-static void doLogLine( const char *message )
+static void getLogTempName( char *tempFileName )
 {
-	FILE *out;
-	char tempFileName[1024];
 	const char *tmp = getenv( "TMP" );
 	if( tmp )
 	{
@@ -84,7 +79,49 @@ static void doLogLine( const char *message )
 		tempFileName[0] = 0;
 	}
 	strcat(tempFileName, "\\" SERVICE_NAME ".log" );
-	
+}
+
+void apendLogMail( void )
+{
+	FILE	*in;
+	char	tempFileName[10240];
+	bool	success = false;
+
+	getLogTempName(tempFileName);
+	in = fopen( tempFileName, "rb" );
+	if( in )
+	{
+		char	*buffer;
+		long	size;
+
+		fseek(in, 0, SEEK_END);
+		size = ftell( in );
+		fseek(in, 0, SEEK_SET);
+
+		buffer = (char *)malloc(size+1);
+		if( buffer )
+		{
+			if( (long)fread(buffer,1,size,in ) == size )
+			{
+				buffer[size]=0;
+				if( !appendMail2( "Crontab error logs", buffer ) )
+					success = true;
+			}
+			free( buffer );
+		}
+		fclose(in);
+		if( success )
+			unlink(tempFileName);
+	}
+
+}
+
+static void doLogLine( const char *message )
+{
+	FILE *out;
+	char tempFileName[10240];
+
+	getLogTempName(tempFileName);
 	out = fopen( tempFileName, "a" );
 	if( out )
 	{
@@ -136,6 +173,10 @@ static void EventLog( int type, const char *format, ... )
 	{
 		ReportEvent( eventHndl, (WORD)type, 0, 0, 0, 1, 0, (LPCTSTR*)&msg, NULL );
 		DeregisterEventSource( eventHndl );
+		if( type == EVENTLOG_ERROR_TYPE )
+		{
+			appendMail2( "crontab error event", message );
+		}
 	}
 	else
 	{
@@ -143,6 +184,7 @@ static void EventLog( int type, const char *format, ... )
 		logNTerror();
 		doLogLine( message );
 	}
+	apendLogMail();
 }
 
 /*
@@ -480,12 +522,12 @@ static void calcNextStart4All( void )
 			GetExitCodeProcess( jobList[jobToStart].pid, &exitCode );
 			if( exitCode != STILL_ACTIVE )
 			{
-				if( jobList[jobToStart].logProcess )
+				if( jobList[jobToStart].logProcess || exitCode )
 				{
 					EventLog( 
-						EVENTLOG_INFORMATION_TYPE, 
-						"%s terminated, time %lu seconds ", 
-						jobList[jobToStart].commandLine, (clock()-jobList[jobToStart].startTime)/CLK_TCK 
+						exitCode ? EVENTLOG_ERROR_TYPE: EVENTLOG_INFORMATION_TYPE, 
+						"%s terminated, time %lu seconds %lu exitCode", 
+						jobList[jobToStart].commandLine, (clock()-jobList[jobToStart].startTime)/CLK_TCK, exitCode 
 					);
 				}
 				calcNextStart( jobToStart );

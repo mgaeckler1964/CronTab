@@ -35,4 +35,5 @@
 *.sdf
 *.bak
 *.suo
+*.opensdf
 ipch/
