@@ -85,9 +85,9 @@ using namespace winlibGUI;
 
 class CreateEditJobForm : public CreateEditJobForm_form
 {
-	STRING	jobTitle;
+	STRING	m_jobTitle;
 
-	virtual ProcessStatus handleCreate( void );
+	virtual ProcessStatus handleCreate();
 	virtual ProcessStatus handleOk();
 
 public:
@@ -95,13 +95,17 @@ public:
 
 	void setJobTitle( const STRING &newJobTitle )
 	{
-		jobTitle = newJobTitle;
+		m_jobTitle = newJobTitle;
+	}
+	const STRING &getJobTitle() const
+	{
+		return m_jobTitle;
 	}
 };
 
 class CronConfMainWindow : public cronConfMainForm_form
 {
-	void checkService( void );
+	void checkService();
 
 	void AddCronJob();
 	void EditCronJob();
@@ -112,7 +116,7 @@ class CronConfMainWindow : public cronConfMainForm_form
 	void StopService();
 	void StartService();
 
-	virtual ProcessStatus handleCreate( void );
+	virtual ProcessStatus handleCreate();
 	virtual ProcessStatus handleButtonClick( int control );
 
 public:
@@ -166,11 +170,11 @@ static CronConfApplication	cronConfApplication;
 // --------------------------------------------------------------------- //
 
 static int readJob(	const char *jobTitle,
-					char *command,
-					char *nextStart,
-					char *interval,
-					char *intervalType,
-					bool *multipleInst )
+					STRING	*command,
+					STRING	*nextStart,
+					STRING	*interval,
+					STRING	*intervalType,
+					bool	*multipleInst )
 {
 	DWORD			dummy;
 	long			openResult;
@@ -178,8 +182,8 @@ static int readJob(	const char *jobTitle,
 	HKEY			cresdKey;
 	HKEY			crontabKey;
 	HKEY			jobKey;
-	char			multiple[BUFFER_SIZE];
-
+	unsigned char	multiple[16];
+	
 	DWORD			size;
 
 	int				result = JOB_BAD_READ;
@@ -212,17 +216,45 @@ static int readJob(	const char *jobTitle,
 												&dummy );
 				if( openResult == ERROR_SUCCESS )
 				{
-					size = BUFFER_SIZE;
-					RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (unsigned char *)command, &size );
-					size = BUFFER_SIZE;
-					RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (unsigned char *)interval, &size );
-					size = BUFFER_SIZE;
-					RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (unsigned char *)intervalType, &size );
-					size = BUFFER_SIZE;
-					RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (unsigned char *)nextStart, &size );
-					size = BUFFER_SIZE;
+					size = 0;
+					openResult = RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (LPBYTE)"", &size );
+					if( openResult == ERROR_MORE_DATA )
+					{
+						command->setMinSize(size+1);
+					}
+					RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (LPBYTE)command->c_str(), &size );
+					command->setActSize( size-1 );
+
+					size = 0;
+					RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (LPBYTE)"", &size );
+					if( openResult == ERROR_MORE_DATA )
+					{
+						interval->setMinSize(size+1);
+					}
+					RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (LPBYTE)interval->c_str(), &size );
+					interval->setActSize(size-1);
+
+					size = 0;
+					RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (LPBYTE)"", &size );
+					if( openResult == ERROR_MORE_DATA )
+					{
+						intervalType->setMinSize(size+1);
+					}
+					RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (LPBYTE)intervalType->c_str(), &size );
+					intervalType->setActSize(size-1);
+
+					size = 0;
+					RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (LPBYTE)"", &size );
+					if( openResult == ERROR_MORE_DATA )
+					{
+						nextStart->setMinSize(size+1);
+					}
+					RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (LPBYTE)nextStart->c_str(), &size );
+					nextStart->setActSize(size-1);
+
+					size = sizeof( multiple );
 					*multiple = 0;
-					RegQueryValueEx( jobKey, MULTIPLE_INST, NULL, NULL, (unsigned char *)multiple, &size );
+					RegQueryValueEx( jobKey, MULTIPLE_INST, NULL, NULL, multiple, &size );
 					if( *multiple == '1' )
 						*multipleInst = true;
 					else
@@ -401,8 +433,6 @@ static void readCronJobs( ListBox *cronJobs )
 	HKEY			crontabKey;
 
 	DWORD			index;
-	char			cronJobTitle[BUFFER_SIZE];
-	DWORD			titleSize;
 
 	cronJobs->clearEntries();
 
@@ -426,14 +456,22 @@ static void readCronJobs( ListBox *cronJobs )
 											&dummy );
 			if( openResult == ERROR_SUCCESS )
 			{
+				STRING cronJobTitle;
 				index = 0;
 
+				DWORD maxTitleSize;
+				RegQueryInfoKey(crontabKey, NULL, NULL, NULL, NULL, &maxTitleSize, NULL, NULL, NULL, NULL, NULL, NULL );
+				++maxTitleSize;
 				while( 1 )
 				{
-					titleSize = sizeof( cronJobTitle );
-					openResult = RegEnumKeyEx( crontabKey, index++, cronJobTitle, &titleSize, NULL, NULL, NULL, NULL );
+					DWORD titleSize = maxTitleSize;
+					cronJobTitle.setMinSize(maxTitleSize+1);
+					openResult = RegEnumKeyEx( crontabKey, index++, (LPSTR)cronJobTitle.c_str(), &titleSize, NULL, NULL, NULL, NULL );
 					if( openResult == ERROR_SUCCESS )
+					{
+						cronJobTitle.setActSize(titleSize);
 						cronJobs->addEntry( cronJobTitle );
+					}
 					else
 						break;
 				}
@@ -491,6 +529,7 @@ void CronConfMainWindow::EditCronJob()
 			if( dialog.getModalResult() == IDOK )
 			{
 				readCronJobs( cronJobs );
+				cronJobs->selectEntry( dialog.getJobTitle() );
 			}
 		}
 	}
@@ -511,7 +550,7 @@ void CronConfMainWindow::DeleteJob()
 }
 
 
-void CronConfMainWindow::checkService( void )
+void CronConfMainWindow::checkService()
 {
 	SC_HANDLE	serviceManager;
 	SC_HANDLE	jobService;
@@ -641,34 +680,28 @@ void CronConfMainWindow::InstallService()
 	// INSERT>> Your code here.
 	SC_HANDLE		serviceManager;
 	SC_HANDLE		jobService;
-	char			appPath[1024];
-	STRING			password,
-					username;
-	char			*lastBackSlash;
 
 	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
 	if( serviceManager )
 	{
-		GetModuleFileName( NULL, appPath, sizeof( appPath ) - 1 );
-		lastBackSlash = strrchr( appPath, '\\' );
-		if( lastBackSlash )
-			lastBackSlash++;
-
 		// stop the dispatcher
 		jobService = OpenService( serviceManager, SERVICE_NAME, SERVICE_ALL_ACCESS );
 		if( !jobService )
 		{
-			// create the service
-			if( lastBackSlash )
-				strcpy( lastBackSlash, "CRONTAB.EXE " );
-
 			// service not yet created
+			// create the service
 
-			password = EditPassword->getText();
-			username = EditUsername->getText();
+			STRING appName = cronConfApplication.getFileName();
+			size_t lastBackSlash = appName.searchRChar( DIRECTORY_DELIMITER );
+			appName.cut( lastBackSlash+1 );
+
+			appName += "CRONTAB.EXE";
+
+			STRING password = EditPassword->getText();
+			STRING username = EditUsername->getText();
 			if( !username.isEmpty() )
 			{
-				if( username.searchChar( '\\' ) == -1 )
+				if( username.searchChar( '\\' ) == STRING::no_index )
 					username = STRING(".\\" ) + username;
 			}
 
@@ -680,7 +713,7 @@ void CronConfMainWindow::InstallService()
 							SERVICE_WIN32_OWN_PROCESS,
 							SERVICE_AUTO_START,
 							SERVICE_ERROR_NORMAL,
-							appPath,
+							appName,
 							NULL, NULL, NULL,
 							!username.isEmpty() ? (const char *)username : NULL,
 							!username.isEmpty() ? (const char *)password : NULL );
@@ -707,19 +740,19 @@ void CronConfMainWindow::InstallService()
 // ----- class virtuals ------------------------------------------------ //
 // --------------------------------------------------------------------- //
    
-ProcessStatus CreateEditJobForm::handleCreate( void )
+ProcessStatus CreateEditJobForm::handleCreate()
 {
-	if( !jobTitle.isEmpty() )
+	if( !m_jobTitle.isEmpty() )
 	{
-		char	commandLineBuffer[BUFFER_SIZE];
-		char	nextStartBuffer[BUFFER_SIZE];
-		char	intervalBuffer[BUFFER_SIZE];
-		char	intervalTypeBuffer[BUFFER_SIZE];
+		STRING	commandLineBuffer;
+		STRING	nextStartBuffer;
+		STRING	intervalBuffer;
+		STRING	intervalTypeBuffer;
 		bool	multipleInst;
 
-		readJob( jobTitle, commandLineBuffer, nextStartBuffer, intervalBuffer, intervalTypeBuffer, &multipleInst );
+		readJob( m_jobTitle, &commandLineBuffer, &nextStartBuffer, &intervalBuffer, &intervalTypeBuffer, &multipleInst );
 
-		newTitle->setText( jobTitle );
+		newTitle->setText( m_jobTitle );
 		nextStart->setText( nextStartBuffer );
 		commandLine->setText( commandLineBuffer );
 		interval->setText( intervalBuffer  );
@@ -759,7 +792,7 @@ ProcessStatus CreateEditJobForm::handleOk()
 
 	if( !titleBuffer.isEmpty() )
 	{
-		error = writeJob( jobTitle, titleBuffer, commandLineBuffer, nextStartBuffer, intervalBuffer, intervalTypeBuffer, multipleInst );
+		error = writeJob( m_jobTitle, titleBuffer, commandLineBuffer, nextStartBuffer, intervalBuffer, intervalTypeBuffer, multipleInst );
 		switch( error )
 		{
 			case JOB_OK:
@@ -788,7 +821,7 @@ ProcessStatus CreateEditJobForm::handleOk()
 	return psPROCESSED;
 }
 
-ProcessStatus CronConfMainWindow::handleCreate( void )
+ProcessStatus CronConfMainWindow::handleCreate()
 {
 	InfoLabel->setText(gak::formatNumber(sizeof(void*)*8) + "-bit");
 

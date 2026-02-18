@@ -85,7 +85,7 @@ namespace winlibGUI {
 "<layout attachment=\"4\" paddingLeft=\"8\" paddingRight=\"8\" paddingTop=\"4\" paddingBottom=\"0\" growWidth=\"1\" growHeight=\"1\" />\n"
 "</child>\n"
 "</form>\n"
-"<form name=\"CreateEditJobForm\" width=\"518\" height=\"172\" caption=\"Create/Edit Cron Job\" style=\"2428502016\" baseClass=\"ModalPopup\" id=\"129\">\n"
+"<form name=\"CreateEditJobForm\" width=\"634\" height=\"172\" caption=\"Create/Edit Cron Job\" style=\"2424569856\" baseClass=\"ModalPopup\" id=\"129\">\n"
 "<layoutManager type=\"TableManager\" marginLeft=\"4\" marginRight=\"4\" marginTop=\"4\" marginBottom=\"4\" />\n"
 "<child type=\"Label\" name=\"\" caption=\"Title:\" x=\"25\" y=\"21\" width=\"0\" height=\"0\" style=\"1342242827\">\n"
 "<layout paddingLeft=\"4\" paddingRight=\"4\" paddingTop=\"4\" paddingBottom=\"4\" x=\"1\" y=\"0\" />\n"
