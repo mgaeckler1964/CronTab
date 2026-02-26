@@ -36,13 +36,7 @@
 
 #define BUFFER_SIZE			10240				/// TODO: get rid of fixed buffers in crontab 
 
-#if defined( __WIN32__ )
 #define SOFTWARE_KEY "Software"
-#elif defined( __WIN64__ )
-#define SOFTWARE_KEY "Software\\Wow6432Node"
-#else
-#error "What windows???"
-#endif
 
 #define COMPANY			"Gak"
 #define SERVICE_NAME	"GakCronTab"

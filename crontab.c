@@ -1,6 +1,6 @@
 /*
 		Project:		Crontab
-		Module:			crontab,c
+		Module:			crontab.c
 		Description:	My implemetation of crontab for windows.
 		Author:			Martin Gäckler
 		Address:		Hofmannsthalweg 14, A-4030 Linz
@@ -208,13 +208,13 @@ static void readJobList( void )
 	DWORD	numSubKeys;
 	DWORD	size;
 
-	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+	openResult = RegOpenKeyEx(	HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
+								KEY_READ|KEY_WOW64_32KEY, &softKey );
 	if( openResult == ERROR_SUCCESS )
 	{
 		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
 										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
+										KEY_READ|KEY_WOW64_32KEY,
 										NULL,
 										&cresdKey,
 										&dummy );
@@ -222,7 +222,7 @@ static void readJobList( void )
 		{
 			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
 											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
+											KEY_READ|KEY_WOW64_32KEY,
 											NULL,
 											&crontabKey,
 											&dummy );
@@ -247,20 +247,24 @@ static void readJobList( void )
 							openResult = RegEnumKeyEx( crontabKey, index, jobList[index].cronJobTitle, &size, NULL, NULL, NULL, NULL );
 							if( openResult == ERROR_SUCCESS )
 							{
-								openResult = RegOpenKeyEx( crontabKey, jobList[index].cronJobTitle, 0, KEY_READ, &jobKey );
+								openResult = RegOpenKeyEx( crontabKey, jobList[index].cronJobTitle, 0, KEY_READ|KEY_WOW64_32KEY, &jobKey );
 								if( openResult == ERROR_SUCCESS )
 								{
 									size = BUFFER_SIZE;
+									*jobList[index].commandLine = 0;
 									RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (unsigned char *)jobList[index].commandLine, &size );
 									size = BUFFER_SIZE;
+									*interval = 0;
 									RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (unsigned char *)interval, &size );
 									size = BUFFER_SIZE;
+									*intervalType = 0;
 									RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (unsigned char *)intervalType, &size );
 									size = BUFFER_SIZE;
+									*nextStart = 0;
 									RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (unsigned char *)nextStart, &size );
 									size = BUFFER_SIZE;
+									*multiInst = 0;
 									RegQueryValueEx( jobKey, MULTIPLE_INST, NULL, NULL, (unsigned char *)multiInst, &size );
-
 
 									jobList[index].nextDay			=
 									jobList[index].nextMonth		=
@@ -401,12 +405,12 @@ static void saveNextStart(	const char *title,
 	HKEY			jobKey;
 
 	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+								KEY_CREATE_SUB_KEY|KEY_WOW64_32KEY, &softKey );
 	if( openResult == ERROR_SUCCESS )
 	{
 		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
 										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
+										KEY_ALL_ACCESS|KEY_WOW64_32KEY,
 										NULL,
 										&cresdKey,
 										&dummy );
@@ -414,7 +418,7 @@ static void saveNextStart(	const char *title,
 		{
 			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
 											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
+											KEY_ALL_ACCESS|KEY_WOW64_32KEY,
 											NULL,
 											&crontabKey,
 											&dummy );

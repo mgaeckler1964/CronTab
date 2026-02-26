@@ -6,7 +6,7 @@
 		Address:		Hofmannsthalweg 14, A-4030 Linz
 		Web:			https://www.gaeckler.at/
 
-		Copyright:		(c) 1988-2025 Martin Gäckler
+		Copyright:		(c) 1988-2026 Martin Gäckler
 
 		This program is free software: you can redistribute it and/or modify  
 		it under the terms of the GNU General Public License as published by  
@@ -29,6 +29,15 @@
 		SUCH DAMAGE.
 */
 
+/**
+	TODO
+	====
+
+	After migrating contab to C++ and the Registry class we shoulf implement 
+	a migration from some string values to their integer representation.
+	these are: multiple, interval and intervaltype
+
+*/
 // --------------------------------------------------------------------- //
 // ----- switches ------------------------------------------------------ //
 // --------------------------------------------------------------------- //
@@ -38,7 +47,10 @@
 // --------------------------------------------------------------------- //
 
 #include <gak/fmtNumber.h>
+#include <gak/array.h>
+
 #include <winlib/WINAPP.H>
+#include <winlib/registry.h>
 
 #include "CronConf.gui.h"
 #include "cronconst.h"
@@ -58,6 +70,7 @@
 #	pragma option -pc
 #endif
 
+using namespace gak;
 using namespace winlib;
 using namespace winlibGUI;
 
@@ -176,196 +189,128 @@ static int readJob(	const char *jobTitle,
 					STRING	*intervalType,
 					bool	*multipleInst )
 {
-	DWORD			dummy;
 	long			openResult;
-	HKEY			softKey;
-	HKEY			cresdKey;
-	HKEY			crontabKey;
-	HKEY			jobKey;
+	Registry		softKey;
+	Registry		cresdKey;
+	Registry		crontabKey;
+	Registry		jobKey;
 	unsigned char	multiple[16];
 	
-	DWORD			size;
-
 	int				result = JOB_BAD_READ;
 
-	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+	openResult = softKey.openPublic(SOFTWARE_KEY, KEY_READ|KEY_WOW64_32KEY );
 	if( openResult == ERROR_SUCCESS )
 	{
-		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
-										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
-										NULL,
-										&cresdKey,
-										&dummy );
+		openResult = cresdKey.openSubkey( softKey, COMPANY, KEY_READ|KEY_WOW64_32KEY );
 		if( openResult == ERROR_SUCCESS )
 		{
-			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
-											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
-											NULL,
-											&crontabKey,
-											&dummy );
+			openResult = crontabKey.openSubkey( cresdKey, SERVICE_NAME, KEY_READ|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
-				openResult = RegCreateKeyEx(	crontabKey, jobTitle, 0, "",
-												REG_OPTION_NON_VOLATILE,
-												KEY_ALL_ACCESS,
-												NULL,
-												&jobKey,
-												&dummy );
+				openResult = jobKey.openSubkey(	crontabKey, jobTitle, KEY_READ|KEY_WOW64_32KEY );
 				if( openResult == ERROR_SUCCESS )
 				{
-					size = 0;
-					openResult = RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (LPBYTE)"", &size );
-					if( openResult == ERROR_MORE_DATA )
-					{
-						command->setMinSize(size+1);
-					}
-					RegQueryValueEx( jobKey, COMMAND_LINE, NULL, NULL, (LPBYTE)command->c_str(), &size );
-					command->setActSize( size-1 );
+					if( jobKey.readValue( COMMAND_LINE, command ) != rsOK )
+						command->release();
 
-					size = 0;
-					RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (LPBYTE)"", &size );
-					if( openResult == ERROR_MORE_DATA )
-					{
-						interval->setMinSize(size+1);
-					}
-					RegQueryValueEx( jobKey, INTERVAL, NULL, NULL, (LPBYTE)interval->c_str(), &size );
-					interval->setActSize(size-1);
+					if( jobKey.readValue( INTERVAL, interval ) != rsOK )
+						interval->release();
 
-					size = 0;
-					RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (LPBYTE)"", &size );
-					if( openResult == ERROR_MORE_DATA )
-					{
-						intervalType->setMinSize(size+1);
-					}
-					RegQueryValueEx( jobKey, INTERVAL_TYPE, NULL, NULL, (LPBYTE)intervalType->c_str(), &size );
-					intervalType->setActSize(size-1);
+					if( jobKey.readValue( INTERVAL_TYPE, intervalType ) != rsOK )
+						intervalType->release();
 
-					size = 0;
-					RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (LPBYTE)"", &size );
-					if( openResult == ERROR_MORE_DATA )
-					{
-						nextStart->setMinSize(size+1);
-					}
-					RegQueryValueEx( jobKey, NEXT_START, NULL, NULL, (LPBYTE)nextStart->c_str(), &size );
-					nextStart->setActSize(size-1);
+					if( jobKey.readValue( NEXT_START, nextStart ) != rsOK )
+						nextStart->release();
 
-					size = sizeof( multiple );
-					*multiple = 0;
-					RegQueryValueEx( jobKey, MULTIPLE_INST, NULL, NULL, multiple, &size );
-					if( *multiple == '1' )
+					size_t size = sizeof( multiple );
+					if( jobKey.queryValue( MULTIPLE_INST, &multiple, &size ) == rtSTRING && multiple[0U] == '1' )
+					{
 						*multipleInst = true;
+					}
 					else
+					{
 						*multipleInst = false;
+					}
 
 					result = JOB_OK;
-					RegCloseKey( jobKey );
 				}
 				else
 					result = JOB_BAD_INSERT;
-
-				RegCloseKey( crontabKey );
 			}
-
-			RegCloseKey( cresdKey );
 		}
-		RegCloseKey( softKey );
 	}
 
 	return result;
 }
 
-static int writeJob(	const char *oldJob, const char *newTitle,
-						const char *command,
-						const char *nextStart,
-						const char *interval,
-						const char *intervalType,
+static int writeJob(	const STRING &oldJob, const STRING &newTitle,
+						const STRING &command,
+						const STRING &nextStart,
+						const STRING &interval,
+						const STRING &intervalType,
 						bool		multipleInstances )
 {
-	DWORD			dummy;
 	long			openResult;
-	HKEY			softKey;
-	HKEY			cresdKey;
-	HKEY			crontabKey;
-	HKEY			jobKey;
-	char			multipleInst[2];
+	Registry		softKey;
 
 	int				result = JOB_BAD_INSERT;
 
-	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+	openResult = softKey.openPublic( SOFTWARE_KEY, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 	if( openResult == ERROR_SUCCESS )
 	{
-		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
-										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
-										NULL,
-										&cresdKey,
-										&dummy );
+		Registry		cresdKey;
+
+		openResult = cresdKey.createKey( softKey, COMPANY, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 		if( openResult == ERROR_SUCCESS )
 		{
-			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
-											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
-											NULL,
-											&crontabKey,
-											&dummy );
+			Registry		crontabKey;
+
+			openResult = crontabKey.createKey( cresdKey, SERVICE_NAME, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
-				jobKey = NULL;
-				if( strcmp( oldJob, newTitle ) )
+				Registry		jobKey;
+
+				if( oldJob != newTitle )
 				{
-					openResult = RegOpenKeyEx( crontabKey, newTitle, 0, KEY_READ, &jobKey );
+					openResult = jobKey.openSubkey( crontabKey, newTitle, KEY_READ|KEY_WOW64_32KEY );
 					if( openResult == ERROR_SUCCESS )
 					{
 						result = JOB_EXISTS;
-						RegCloseKey( jobKey );
 					}
 				}
 				if( !jobKey )
 				{
+					char	multipleInst[2];
+
 					openResult = ERROR_SUCCESS;
-					if( *oldJob )
+					if( !oldJob.isEmpty() )
 					{
-						openResult = RegDeleteKey( crontabKey, oldJob );
+						openResult = crontabKey.deleteSubkey( oldJob );
 						if( openResult != ERROR_SUCCESS )
 							result = JOB_BAD_DELETE;
 					}
 					if( openResult == ERROR_SUCCESS )
 					{
-						openResult = RegCreateKeyEx(	crontabKey, newTitle, 0, "",
-														REG_OPTION_NON_VOLATILE,
-														KEY_ALL_ACCESS,
-														NULL,
-														&jobKey,
-														&dummy );
+						openResult = jobKey.createKey( crontabKey, newTitle, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 						if( openResult == ERROR_SUCCESS )
 						{
-							RegSetValueExA( jobKey, COMMAND_LINE, 0, REG_SZ, (const unsigned char *)command, DWORD(strlen( command ) + 1) );
-							RegSetValueEx( jobKey, INTERVAL, 0, REG_SZ, (const unsigned char *)interval, DWORD(strlen( interval ) + 1) );
-							RegSetValueEx( jobKey, INTERVAL_TYPE, 0, REG_SZ, (const unsigned char *)intervalType, DWORD(strlen( intervalType ) + 1) );
-							RegSetValueEx( jobKey, NEXT_START, 0, REG_SZ, (const unsigned char *)nextStart, DWORD(strlen( nextStart ) + 1) );
+							jobKey.writeValue( COMMAND_LINE, command );
+							jobKey.writeValue( INTERVAL, interval );
+							jobKey.writeValue( INTERVAL_TYPE, intervalType );
+							jobKey.writeValue( NEXT_START, nextStart );
 
 							multipleInst[0] = multipleInstances ? '1' : '0';
 							multipleInst[1] = 0;
-							RegSetValueEx( jobKey, MULTIPLE_INST, 0, REG_SZ, (const unsigned char *)multipleInst, DWORD(strlen( multipleInst ) + 1) );
+							jobKey.setValueEx( MULTIPLE_INST, rtSTRING, multipleInst, 2 );
 
 							result = JOB_OK;
-							RegCloseKey( jobKey );
 						}
 						else
 							result = JOB_BAD_INSERT;
 					}
 				}
-
-				RegCloseKey( crontabKey );
 			}
-
-			RegCloseKey( cresdKey );
 		}
-		RegCloseKey( softKey );
 	}
 
 	return result;
@@ -373,39 +318,23 @@ static int writeJob(	const char *oldJob, const char *newTitle,
 
 static void deleteCronJob( const char *jobTitle )
 {
-	DWORD			dummy;
 	long			openResult;
-	HKEY			softKey;
-	HKEY			cresdKey;
-	HKEY			crontabKey;
+	Registry		softKey;
+	Registry		cresdKey;
+	Registry		crontabKey;
 
-	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+	openResult = softKey.openPublic( SOFTWARE_KEY, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 	if( openResult == ERROR_SUCCESS )
 	{
-		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
-										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
-										NULL,
-										&cresdKey,
-										&dummy );
+		openResult = cresdKey.createKey( softKey, COMPANY, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 		if( openResult == ERROR_SUCCESS )
 		{
-			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
-											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
-											NULL,
-											&crontabKey,
-											&dummy );
+			openResult = crontabKey.createKey( cresdKey, SERVICE_NAME, KEY_ALL_ACCESS|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
-				RegDeleteKey( crontabKey, jobTitle );
-				RegCloseKey( crontabKey );
+				crontabKey.deleteSubkey( jobTitle );
 			}
-
-			RegCloseKey( cresdKey );
 		}
-		RegCloseKey( softKey );
 	}
 }
 
@@ -426,62 +355,34 @@ static char *getServiceStatus( DWORD status )
 
 static void readCronJobs( ListBox *cronJobs )
 {
-	DWORD			dummy;
 	long			openResult;
-	HKEY			softKey;
-	HKEY			cresdKey;
-	HKEY			crontabKey;
-
-	DWORD			index;
+	Registry		softKey;
+	Registry		cresdKey;
+	Registry		crontabKey;
 
 	cronJobs->clearEntries();
 
-	openResult = RegOpenKeyEx( HKEY_LOCAL_MACHINE, SOFTWARE_KEY, 0,
-								KEY_CREATE_SUB_KEY, &softKey );
+	openResult = softKey.openPublic( SOFTWARE_KEY, KEY_READ|KEY_WOW64_32KEY );
 	if( openResult == ERROR_SUCCESS )
 	{
-		openResult = RegCreateKeyEx(	softKey, COMPANY, 0, "",
-										REG_OPTION_NON_VOLATILE,
-										KEY_ALL_ACCESS,
-										NULL,
-										&cresdKey,
-										&dummy );
+		openResult = cresdKey.openSubkey( softKey, COMPANY, KEY_READ|KEY_WOW64_32KEY );
 		if( openResult == ERROR_SUCCESS )
 		{
-			openResult = RegCreateKeyEx(	cresdKey, SERVICE_NAME, 0, "",
-											REG_OPTION_NON_VOLATILE,
-											KEY_ALL_ACCESS,
-											NULL,
-											&crontabKey,
-											&dummy );
+			openResult = crontabKey.openSubkey(	cresdKey, SERVICE_NAME, KEY_READ|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
-				STRING cronJobTitle;
-				index = 0;
-
-				DWORD maxTitleSize;
-				RegQueryInfoKey(crontabKey, NULL, NULL, NULL, NULL, &maxTitleSize, NULL, NULL, NULL, NULL, NULL, NULL );
-				++maxTitleSize;
-				while( 1 )
+				ArrayOfStrings	keyNames;
+				crontabKey.getKeyNames( &keyNames );
+				for(
+					ArrayOfStrings::const_iterator it = keyNames.cbegin(), endIT = keyNames.cend();
+					it != endIT;
+					++it
+				)
 				{
-					DWORD titleSize = maxTitleSize;
-					cronJobTitle.setMinSize(maxTitleSize+1);
-					openResult = RegEnumKeyEx( crontabKey, index++, (LPSTR)cronJobTitle.c_str(), &titleSize, NULL, NULL, NULL, NULL );
-					if( openResult == ERROR_SUCCESS )
-					{
-						cronJobTitle.setActSize(titleSize);
-						cronJobs->addEntry( cronJobTitle );
-					}
-					else
-						break;
+					cronJobs->addEntry( *it );
 				}
-
-				RegCloseKey( crontabKey );
 			}
-
-			RegCloseKey( cresdKey );
 		}
-		RegCloseKey( softKey );
 	}
 }
 
@@ -775,24 +676,17 @@ ProcessStatus CreateEditJobForm::handleOk()
 {
 	bool	doClose = false;
 
-	STRING	commandLineBuffer,
-			nextStartBuffer,
-			titleBuffer,
-			intervalBuffer,
-			intervalTypeBuffer;
 	int		error;
-	bool	multipleInst;
 
-	titleBuffer = newTitle->getText();
-	nextStartBuffer = nextStart->getText();
-	commandLineBuffer = commandLine->getText();
-	intervalBuffer = interval->getText();
-	intervalTypeBuffer = intervalType->getText();
-	multipleInst = multipleInstances->isActive();
-
-	if( !titleBuffer.isEmpty() )
+	STRING title = newTitle->getText();
+	if( !title.isEmpty() )
 	{
-		error = writeJob( m_jobTitle, titleBuffer, commandLineBuffer, nextStartBuffer, intervalBuffer, intervalTypeBuffer, multipleInst );
+		error = writeJob( 
+			m_jobTitle, 
+			title, commandLine->getText(), 
+			nextStart->getText(), interval->getText(), intervalType->getText(), 
+			multipleInstances->isActive() 
+		);
 		switch( error )
 		{
 			case JOB_OK:
