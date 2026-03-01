@@ -371,10 +371,8 @@ static void readCronJobs( ListBox *cronJobs )
 			openResult = crontabKey.openSubkey(	cresdKey, SERVICE_NAME, KEY_READ|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
-				ArrayOfStrings	keyNames;
-				crontabKey.getKeyNames( &keyNames );
 				for(
-					ArrayOfStrings::const_iterator it = keyNames.cbegin(), endIT = keyNames.cend();
+					Registry::key_iterator it = crontabKey.kbegin(), endIT = crontabKey.kend();
 					it != endIT;
 					++it
 				)
