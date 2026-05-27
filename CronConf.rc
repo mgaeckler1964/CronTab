@@ -40,7 +40,7 @@
 
 // Application ICON
 //
-IDI_SDIAPPLICATION ICON "applsdi.ico"
+IDI_CRON_APP ICON "applsdi.ico"
 
 
 

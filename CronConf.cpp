@@ -46,6 +46,8 @@
 // ----- includes ------------------------------------------------------ //
 // --------------------------------------------------------------------- //
 
+#include <WINLIB/Service.h>
+
 #include <gak/fmtNumber.h>
 #include <gak/array.h>
 
@@ -120,14 +122,14 @@ class CronConfMainWindow : public cronConfMainForm_form
 {
 	void checkService();
 
-	void AddCronJob();
-	void EditCronJob();
-	void DeleteJob();
+	void addCronJob();
+	void editCronJob();
+	void deleteJob();
 
-	void InstallService();
-	void RemoveService();
-	void StopService();
-	void StartService();
+	void installService();
+	void removeService();
+	void stopService();
+	void startService();
 
 	virtual ProcessStatus handleCreate();
 	virtual ProcessStatus handleButtonClick( int control );
@@ -141,15 +143,14 @@ class CronConfApplication : public GuiApplication
 	virtual CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ )
 	{
 		doEnableLogEx(gakLogging::llInfo);
-		CronConfMainWindow	*mainWindow = new CronConfMainWindow;
-		if( mainWindow->create( NULL ) == scERROR )
+		std::auto_ptr<CronConfMainWindow>	mainWindow( new CronConfMainWindow );
+		if( mainWindow->create( nullptr ) == scERROR )
 		{
-			MessageBox( NULL, "Could not create window", "Error", MB_ICONERROR );
-			delete mainWindow;
-			mainWindow = NULL;
+			throw gak::LibraryException( "Could not create window!" );
 		}
+		mainWindow->focus();
 
-		return mainWindow;
+		return mainWindow.release();
 	}
 	virtual void deleteMainWindow( BasicWindow  *mainWindow )
 	{
@@ -157,7 +158,7 @@ class CronConfApplication : public GuiApplication
 	}
 
 	public:
-	CronConfApplication() : GuiApplication( IDI_SDIAPPLICATION ) {}
+	CronConfApplication() : GuiApplication( IDI_CRON_APP ) {}
 };
 
 // --------------------------------------------------------------------- //
@@ -189,11 +190,8 @@ static int readJob(	const char *jobTitle,
 					STRING	*intervalType,
 					bool	*multipleInst )
 {
-	long			openResult;
 	Registry		softKey;
-	Registry		cresdKey;
-	Registry		crontabKey;
-	Registry		jobKey;
+	long			openResult;
 	unsigned char	multiple[16];
 	
 	int				result = JOB_BAD_READ;
@@ -201,12 +199,16 @@ static int readJob(	const char *jobTitle,
 	openResult = softKey.openPublic(SOFTWARE_KEY, KEY_READ|KEY_WOW64_32KEY );
 	if( openResult == ERROR_SUCCESS )
 	{
+		Registry cresdKey;
+
 		openResult = cresdKey.openSubkey( softKey, COMPANY, KEY_READ|KEY_WOW64_32KEY );
 		if( openResult == ERROR_SUCCESS )
 		{
+			Registry crontabKey;
 			openResult = crontabKey.openSubkey( cresdKey, SERVICE_NAME, KEY_READ|KEY_WOW64_32KEY );
 			if( openResult == ERROR_SUCCESS )
 			{
+				Registry jobKey;
 				openResult = jobKey.openSubkey(	crontabKey, jobTitle, KEY_READ|KEY_WOW64_32KEY );
 				if( openResult == ERROR_SUCCESS )
 				{
@@ -400,7 +402,7 @@ static void readCronJobs( ListBox *cronJobs )
 // ----- class privates ------------------------------------------------ //
 // --------------------------------------------------------------------- //
 
-void CronConfMainWindow::AddCronJob()
+void CronConfMainWindow::addCronJob()
 {
 	CreateEditJobForm	dialog;
 
@@ -415,7 +417,7 @@ void CronConfMainWindow::AddCronJob()
 }
 
 
-void CronConfMainWindow::EditCronJob()
+void CronConfMainWindow::editCronJob()
 {
 	STRING	jobTitle = cronJobs->getSelectedItems();
 
@@ -434,7 +436,7 @@ void CronConfMainWindow::EditCronJob()
 	}
 }
 
-void CronConfMainWindow::DeleteJob()
+void CronConfMainWindow::deleteJob()
 {
 	STRING	jobTitle = cronJobs->getSelectedItems();
 
@@ -451,52 +453,34 @@ void CronConfMainWindow::DeleteJob()
 
 void CronConfMainWindow::checkService()
 {
-	SC_HANDLE	serviceManager;
-	SC_HANDLE	jobService;
-
-	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
+	Service serviceManager( SC_MANAGER_CONNECT );
 	if( serviceManager )
 	{
-		SERVICE_STATUS	status;
-
-		jobService = OpenService( serviceManager, SERVICE_NAME, GENERIC_READ );
+		Service jobService( serviceManager, SERVICE_NAME, GENERIC_READ );
 		if( jobService )
 		{
-			QueryServiceStatus( jobService, &status );
-			crontabStatusLabel->setText( getServiceStatus( status.dwCurrentState ) );
-			CloseServiceHandle( jobService );
+			crontabStatusLabel->setText( getServiceStatus( jobService.queryStatus() ) );
 		}
 		else
 			crontabStatusLabel->setText( "N/A" );
 
 		invalidateWindow();
-
-		CloseServiceHandle( serviceManager );
 	}
 }
 
-void CronConfMainWindow::StartService()
+void CronConfMainWindow::startService()
 {
-	// INSERT>> Your code here.
-	SC_HANDLE		serviceManager;
-	SC_HANDLE		jobService;
-
-	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
+	Service serviceManager;
 	if( serviceManager )
 	{
-		// stop the dispatcher
-		jobService = OpenService( serviceManager, SERVICE_NAME, SERVICE_ALL_ACCESS );
+		Service jobService( serviceManager, SERVICE_NAME );
 		if( jobService )
 		{
-			if( !::StartService( jobService, 0, NULL ) )
+			if( !jobService.startService() )
 				messageBox( "Unable to start job service", "Error", MB_OK|MB_ICONERROR );
-
-			CloseServiceHandle( jobService );
 		}
 		else
 			messageBox( "Unable to open job service", "Error", MB_OK|MB_ICONERROR );
-
-		CloseServiceHandle( serviceManager );
 	}
 	else
 		messageBox( "Unable to open service manager", "FATAL", 0 );
@@ -504,32 +488,16 @@ void CronConfMainWindow::StartService()
 	checkService();
 }
 
-void CronConfMainWindow::StopService()
+void CronConfMainWindow::stopService()
 {
-	SC_HANDLE		serviceManager;
-	SC_HANDLE		jobService;
-	SERVICE_STATUS	serviceStatus;
-
-	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
+	Service serviceManager;
 	if( serviceManager )
 	{
-		// stop the dispatcher
-		jobService = OpenService( serviceManager, SERVICE_NAME, SERVICE_ALL_ACCESS );
+		Service jobService( serviceManager, SERVICE_NAME );
 		if( jobService )
 		{
-			// stop the current service
-			do
-			{
-				ControlService( jobService, SERVICE_CONTROL_STOP, &serviceStatus );
-				Sleep( 1000 );
-				QueryServiceStatus( jobService, &serviceStatus );
-
-			}while( !(serviceStatus.dwCurrentState == SERVICE_STOPPED) );
-
-			CloseServiceHandle( jobService );
+			jobService.stopService();
 		}
-
-		CloseServiceHandle( serviceManager );
 	}
 	else
 		messageBox( "Unable to open service manager", "FATAL", MB_OK|MB_ICONSTOP );
@@ -538,34 +506,17 @@ void CronConfMainWindow::StopService()
 }
 
 
-void CronConfMainWindow::RemoveService()
+void CronConfMainWindow::removeService()
 {
-  // INSERT>> Your code here.
-	SC_HANDLE		serviceManager;
-	SC_HANDLE		jobService;
-	SERVICE_STATUS	serviceStatus;
-
-	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
+	Service serviceManager;
 	if( serviceManager )
 	{
-		// stop the dispatcher
-		jobService = OpenService( serviceManager, SERVICE_NAME, SERVICE_ALL_ACCESS );
+		Service jobService( serviceManager, SERVICE_NAME );
 		if( jobService )
 		{
-			// stop the current service
-			do
-			{
-				ControlService( jobService, SERVICE_CONTROL_STOP, &serviceStatus );
-				Sleep( 1000 );
-				QueryServiceStatus( jobService, &serviceStatus );
-
-			}while( !(serviceStatus.dwCurrentState == SERVICE_STOPPED) );
-
-			DeleteService( jobService );
-			CloseServiceHandle( jobService );
+			jobService.stopService();
+			jobService.removeService();
 		}
-
-		CloseServiceHandle( serviceManager );
 	}
 	else
 		messageBox( "Unable to open service manager", "FATAL", MB_OK|MB_ICONSTOP );
@@ -574,27 +525,19 @@ void CronConfMainWindow::RemoveService()
 }
 
 
-void CronConfMainWindow::InstallService()
+void CronConfMainWindow::installService()
 {
-	// INSERT>> Your code here.
-	SC_HANDLE		serviceManager;
-	SC_HANDLE		jobService;
-
-	serviceManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
+	Service serviceManager;
 	if( serviceManager )
 	{
-		// stop the dispatcher
-		jobService = OpenService( serviceManager, SERVICE_NAME, SERVICE_ALL_ACCESS );
+		Service jobService( serviceManager, SERVICE_NAME );
 		if( !jobService )
 		{
 			// service not yet created
 			// create the service
 
-			STRING appName = cronConfApplication.getFileName();
-			size_t lastBackSlash = appName.searchRChar( DIRECTORY_DELIMITER );
-			appName.cut( lastBackSlash+1 );
-
-			appName += "CRONTAB.EXE";
+			STRING exeName = cronConfApplication.getFileName();
+			exeName = makeFullPath(exeName, "CRONTAB.EXE" );
 
 			STRING password = EditPassword->getText();
 			STRING username = EditUsername->getText();
@@ -604,26 +547,11 @@ void CronConfMainWindow::InstallService()
 					username = STRING(".\\" ) + username;
 			}
 
-			jobService = CreateService(
-							serviceManager,
-							SERVICE_NAME,
-							SERVICE_NAME,
-							SERVICE_ALL_ACCESS,
-							SERVICE_WIN32_OWN_PROCESS,
-							SERVICE_AUTO_START,
-							SERVICE_ERROR_NORMAL,
-							appName,
-							NULL, NULL, NULL,
-							!username.isEmpty() ? (const char *)username : NULL,
-							!username.isEmpty() ? (const char *)password : NULL );
+			jobService.createService( serviceManager, SERVICE_NAME, exeName, username, password );
 		}
 
-		if( jobService )
-			CloseServiceHandle( jobService );
-		else
+		if( !jobService )
 			messageBox( "Unable to create job service", "Error", MB_OK|MB_ICONERROR );
-
-		CloseServiceHandle( serviceManager );
 	}
 	else
 		messageBox( "Unable to open service manager", "FATAL", 0 );
@@ -727,29 +655,29 @@ ProcessStatus CronConfMainWindow::handleButtonClick( int control )
 	switch( control )
 	{
 		case startButton_id:
-			StartService();
+			startService();
 			break;
 		case stopButton_id:
-			StopService();
+			stopService();
 			break;
 		case installButton_id:
-			InstallService();
+			installService();
 			break;
 		case removeButton_id:
-			RemoveService();
+			removeService();
 			break;
 
 
 		case AddButton_id:
-			AddCronJob();
+			addCronJob();
 			break;
 
 		case EditButton_id:
-			EditCronJob();
+			editCronJob();
 			break;
 
 		case DeleteButton_id:
-			DeleteJob();
+			deleteJob();
 			break;
 		
 			

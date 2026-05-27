@@ -32,7 +32,7 @@
 #ifndef CRON_CONST_H
 #define CRON_CONST_H
 
-#define IDI_SDIAPPLICATION      1001            // Application icon
+#define IDI_CRON_APP		1001				// Application icon
 
 #define BUFFER_SIZE			10240				/// TODO: get rid of fixed buffers in crontab 
 
