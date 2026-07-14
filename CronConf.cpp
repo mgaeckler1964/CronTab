@@ -143,7 +143,7 @@ class CronConfApplication : public GuiApplication
 	virtual CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ )
 	{
 		doEnableLogEx(gakLogging::llInfo);
-		std::auto_ptr<CronConfMainWindow>	mainWindow( new CronConfMainWindow );
+		std::unique_ptr<CronConfMainWindow>	mainWindow( new CronConfMainWindow );
 		if( mainWindow->create( nullptr ) == scERROR )
 		{
 			throw gak::LibraryException( "Could not create window!" );
