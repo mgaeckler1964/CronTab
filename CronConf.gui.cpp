@@ -15,7 +15,7 @@ namespace winlibGUI {
 			gak::STRING xmlSrc = "<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>\n"
 "<gui>\n"
 "<forms>\n"
-"<form name=\"cronConfMainForm\" width=\"478\" height=\"607\" caption=\"GAK Contab Configuration\" id=\"128\" baseClass=\"PopupWindow\" style=\"277807104\">\n"
+"<form name=\"cronConfMainForm\" width=\"478\" height=\"607\" caption=\"GAK Contab Configuration\" id=\"128\" baseClass=\"OverlappedWindow\" style=\"277807104\" bgColor=\"COLOR_BTNFACE\" bg_red=\"0\" bg_green=\"0\" bg_blue=\"0\">\n"
 "<child type=\"FrameChild\" name=\"\" caption=\"\" x=\"106\" y=\"115\" width=\"80\" height=\"160\" style=\"1342308352\">\n"
 "<child type=\"FrameChild\" name=\"\" caption=\"\" x=\"60\" y=\"108\" width=\"80\" height=\"50\" style=\"1342308352\">\n"
 "<layoutManager type=\"RowManager\" marginLeft=\"4\" marginRight=\"4\" marginTop=\"4\" marginBottom=\"4\" />\n"

@@ -45,11 +45,11 @@ namespace winlibGUI {
 		GuiApplication(int iconID=-1) : winlib::Application(iconID) {}
 	};
 
-	class cronConfMainForm_form : public winlib::PopupWindow {
+	class cronConfMainForm_form : public winlib::OverlappedWindow {
 		public:
-		cronConfMainForm_form(winlib::BasicWindow *owner) : PopupWindow(owner) {}
+		cronConfMainForm_form(winlib::BasicWindow *owner) : OverlappedWindow(owner) {}
 		winlib::SuccessCode create(winlib::BasicWindow*parent) {
-			return PopupWindow::create(parent,"cronConfMainForm");
+			return OverlappedWindow::create(parent,"cronConfMainForm");
 		}
 
 		winlib::PushButton *startButton;
