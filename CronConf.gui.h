@@ -9,7 +9,7 @@
 #include <winlib/popup.h>
 #include <winlib/frame.h>
 #include <winlib/scrollFrame.h>
-#include <winlib/ControlW.h>
+#include <winlib/ControlWindow.h>
 #include <winlib/xmlEditorChild.h>
 #include <winlib/chartWin.h>
 #include <winlib/gridView.h>
