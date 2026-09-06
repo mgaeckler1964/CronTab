@@ -102,8 +102,8 @@ class CreateEditJobForm : public CreateEditJobForm_form
 {
 	STRING	m_jobTitle;
 
-	virtual ProcessStatus handleCreate();
-	virtual ProcessStatus handleOk();
+	ProcessStatus handleCreate() override;
+	ProcessStatus handleOk() override;
 
 public:
 	CreateEditJobForm() : CreateEditJobForm_form( NULL ) {}
@@ -131,8 +131,8 @@ class CronConfMainWindow : public cronConfMainForm_form
 	void stopService();
 	void startService();
 
-	virtual ProcessStatus handleCreate();
-	virtual ProcessStatus handleButtonClick( int control );
+	ProcessStatus handleCreate() override;
+	ProcessStatus handleButtonClick( int control ) override;
 
 public:
 	CronConfMainWindow() : cronConfMainForm_form( NULL ) {}
@@ -140,7 +140,7 @@ public:
 
 class CronConfApplication : public GuiApplication
 {
-	virtual CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ )
+	CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ ) override
 	{
 		doEnableLogEx(gakLogging::llInfo);
 		std::unique_ptr<CronConfMainWindow>	mainWindow( new CronConfMainWindow );
@@ -152,7 +152,7 @@ class CronConfApplication : public GuiApplication
 
 		return mainWindow.release();
 	}
-	virtual void deleteMainWindow( BasicWindow  *mainWindow )
+	void deleteMainWindow( BasicWindow  *mainWindow ) override
 	{
 		delete mainWindow;
 	}
