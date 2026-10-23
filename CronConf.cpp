@@ -140,7 +140,7 @@ public:
 
 class CronConfApplication : public GuiApplication
 {
-	CallbackWindow  *createMainWindow( const char * /*cmdLine*/, int /*nCmdShow*/ ) override
+	CallbackWindow  *createMainWindow( const char * /*cmdLine*/, ShowWindowMode /*nCmdShow*/ ) override
 	{
 		doEnableLogEx(gakLogging::llInfo);
 		std::unique_ptr<CronConfMainWindow>	mainWindow( new CronConfMainWindow );
