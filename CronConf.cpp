@@ -6,7 +6,7 @@
 		Address:		Hofmannsthalweg 14, A-4030 Linz
 		Web:			https://www.gaeckler.at/
 
-		Copyright:		(c) 1988-2026 Martin Gäckler
+		Copyright:		(c) 2002-2026 Martin Gäckler
 
 		This program is free software: you can redistribute it and/or modify  
 		it under the terms of the GNU General Public License as published by  
@@ -442,7 +442,7 @@ void CronConfMainWindow::deleteJob()
 
 	if( !jobTitle.isEmpty() )
 	{
-		if( messageBox( "Do you want to delete the selected job?", "Delete Confirm", MB_YESNO|MB_ICONQUESTION ) == IDYES )
+		if( messageBox( "Do you want to delete the selected job?", "Delete Confirm", MessageBoxFlags(mbbYesNo, mbiQUESTION) ) == mbrYES )
 		{
 			deleteCronJob( jobTitle );
 			readCronJobs( cronJobs );
