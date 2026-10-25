@@ -477,13 +477,13 @@ void CronConfMainWindow::startService()
 		if( jobService )
 		{
 			if( !jobService.startService() )
-				messageBox( "Unable to start job service", "Error", MB_OK|MB_ICONERROR );
+				messageBox( "Unable to start job service", "Error", MessageBoxFlags(mbbOK, mbiERROR) );
 		}
 		else
-			messageBox( "Unable to open job service", "Error", MB_OK|MB_ICONERROR );
+			messageBox( "Unable to open job service", "Error", MessageBoxFlags(mbbOK, mbiERROR) );
 	}
 	else
-		messageBox( "Unable to open service manager", "FATAL", 0 );
+		messageBox( "Unable to open service manager", "FATAL", MessageBoxFlags(mbbOK, mbiERROR) );
 
 	checkService();
 }
@@ -500,7 +500,7 @@ void CronConfMainWindow::stopService()
 		}
 	}
 	else
-		messageBox( "Unable to open service manager", "FATAL", MB_OK|MB_ICONSTOP );
+		messageBox( "Unable to open service manager", "FATAL", mbiERROR );
 
 	checkService();
 }
@@ -519,7 +519,7 @@ void CronConfMainWindow::removeService()
 		}
 	}
 	else
-		messageBox( "Unable to open service manager", "FATAL", MB_OK|MB_ICONSTOP );
+		messageBox( "Unable to open service manager", "FATAL", mbiERROR );
 
 	checkService();
 }
@@ -551,7 +551,7 @@ void CronConfMainWindow::installService()
 		}
 
 		if( !jobService )
-			messageBox( "Unable to create job service", "Error", MB_OK|MB_ICONERROR );
+			messageBox( "Unable to create job service", "Error", MessageBoxFlags(mbbOK, mbiERROR) );
 	}
 	else
 		messageBox( "Unable to open service manager", "FATAL", 0 );
@@ -619,18 +619,18 @@ ProcessStatus CreateEditJobForm::handleOk()
 				doClose = true;
 				break;
 			case JOB_BAD_DELETE:
-				messageBox( "Cannot delete old key", "Error", MB_OK|MB_ICONSTOP );
+				messageBox( "Cannot delete old key", "Error", mbiERROR );
 				break;
 			case JOB_BAD_INSERT:
-				messageBox( "Cannot create new key", "Error", MB_OK|MB_ICONSTOP );
+				messageBox( "Cannot create new key", "Error", mbiERROR );
 				break;
 			case JOB_EXISTS:
-				messageBox( "Job exists already", "Error", MB_OK|MB_ICONSTOP );
+				messageBox( "Job exists already", "Error", mbiERROR );
 				break;
 		}
 	}
 	else
-		messageBox( "Enter a job title!", "Error", MB_OK|MB_ICONSTOP );
+		messageBox( "Enter a job title!", "Error", mbiERROR );
 
 	if( doClose )
 	{
